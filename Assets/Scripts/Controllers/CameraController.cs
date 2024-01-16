@@ -7,6 +7,12 @@ using UnityEngine.UI;
 
 namespace Controller
 {
+    public enum CamType
+    {
+        PlayerCam,
+
+    }
+
     public class CameraController : MonoBehaviour
     {
         public static CameraController Instance;
@@ -15,7 +21,8 @@ namespace Controller
         [SerializeField] float shakefrequency;
         [SerializeField] float shakeTime;
         [SerializeField] NoiseSettings noiseSetting;
-        [SerializeField] CinemachineVirtualCamera virtualCamera; // temporary
+        private VirtualCamera currentCam;
+        private VirtualCamera[] cams;
         public Camera MainCamera => mainCamera;
 
         void Awake()
@@ -24,11 +31,16 @@ namespace Controller
             {
                 Instance = this;
             }
+            cams = GetComponentsInChildren<VirtualCamera>();
         }
 
         void OnDestroy()
         {
             Instance = null;
+        }
+
+        void Start()
+        {
         }
 
         [Button]
@@ -38,9 +50,28 @@ namespace Controller
 
         }
 
+        public void SetCurrentCam(CamType camType, Transform lookAt= null, Transform follow = null)
+        {
+            foreach (var cam in cams)
+            {
+                if (cam.cameraType == camType)
+                {
+                    cam.virtualCamera.Priority = 99;
+                    currentCam = cam;
+                }
+                else
+                {
+                    cam.virtualCamera.Priority = 10;
+                }
+            }
+            
+            currentCam.SetLookAt(lookAt);
+            currentCam.SetFollow(follow);
+        }
+
         private IEnumerator CorOnShakeCamera()
         {
-            CinemachineBasicMultiChannelPerlin noise = virtualCamera.AddCinemachineComponent<CinemachineBasicMultiChannelPerlin>();
+            CinemachineBasicMultiChannelPerlin noise = currentCam.virtualCamera.AddCinemachineComponent<CinemachineBasicMultiChannelPerlin>();
             noise.m_NoiseProfile = noiseSetting;
             noise.m_AmplitudeGain = shakeStrength;
             noise.m_FrequencyGain = shakefrequency;

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Controller;
 using Interactable;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -13,7 +14,18 @@ namespace Entity
 
         void Start()
         {
+            CameraController.Instance.SetCurrentCam(CamType.PlayerCam, follow: transform);
             handleAttack.Init(handleInput.EntityInput);
+        }
+
+        public override void OnNetworkSpawn()
+        {
+            if (!IsOwner)
+            {
+                this.enabled = false;
+                Destroy(this);
+            }
+
         }
 
         void Update()
@@ -26,7 +38,7 @@ namespace Entity
         {
             if (other.TryGetComponent<Ladder>(out var ladder))
             {
-                
+
             }
         }
     }
